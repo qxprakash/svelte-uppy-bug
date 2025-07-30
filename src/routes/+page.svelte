@@ -1,46 +1,33 @@
 <script lang="ts">
-  import Uppy from '@uppy/core';
-  import '@uppy/core/dist/style.css';
-  import '@uppy/dashboard/dist/style.css';
-  import Tus from '@uppy/tus';
+import Uppy from "@uppy/core";
+import "@uppy/core/dist/style.css";
+import "@uppy/dashboard/dist/style.css";
+import Tus from "@uppy/tus";
+import { Dashboard } from "@uppy/svelte";
+import { onMount } from "svelte";
 
-  let dashboardContainer: HTMLDivElement;
+const uppy = new Uppy({
+	debug: true,
+	autoProceed: false,
+	restrictions: {
+		maxFileSize: 1000000,
+		maxNumberOfFiles: 3,
+		minNumberOfFiles: 1,
+		allowedFileTypes: ["image/*", "video/*"],
+	},
+});
 
-  const uppy = new Uppy({
-    debug: true,
-    autoProceed: false,
-    restrictions: {
-      maxFileSize: 1000000,
-      maxNumberOfFiles: 3,
-      minNumberOfFiles: 1,
-      allowedFileTypes: ['image/*', 'video/*']
-    }
-  });
+uppy.on("complete", (result) => {
+	console.log("Upload complete! Files:", result.successful);
+});
 
-  uppy.on('complete', (result) => {
-    console.log('Upload complete! Files:', result.successful);
-  });
+onMount(() => {
+	uppy.use(Tus, { endpoint: "https://tusd.tusdemo.net/files/" });
 
-  // Initialize Dashboard after component mounts
-  import { onMount } from 'svelte';
-  import Dashboard from '@uppy/dashboard';
-
-  onMount(() => {
-    uppy.use(Dashboard, {
-      target: dashboardContainer,
-      inline: true,
-      width: 750,
-      height: 550,
-      showProgressDetails: true,
-      proudlyDisplayPoweredByUppy: true,
-      note: 'Images and videos only, 1MB max file size, up to 3 files'
-    })
-    .use(Tus, { endpoint: 'https://tusd.tusdemo.net/files/' });
-
-    return () => {
-      uppy.destroy();
-    };
-  });
+	return () => {
+		uppy.destroy();
+	};
+});
 </script>
 
 <main class="p-8 max-w-4xl mx-auto">
@@ -52,7 +39,16 @@
     </p>
   </div>
 
-  <div bind:this={dashboardContainer}></div>
+  <Dashboard
+    {uppy}
+    props={{
+      width: 750,
+      height: 550,
+      showProgressDetails: true,
+      proudlyDisplayPoweredByUppy: true,
+      note: 'Images and videos only, 1MB max file size, up to 3 files'
+    }}
+  />
 </main>
 
 <style>
